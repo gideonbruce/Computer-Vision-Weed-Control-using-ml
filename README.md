@@ -1,1 +1,1 @@
-The model is stored in firebase
+Use Flask (Python) and FastAPI to serve the model.
