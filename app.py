@@ -27,10 +27,11 @@ def predict():
     image = preprocess_image(image)
 
     # Run prediction
-    prediction = model.predict(image)
-    result = prediction.tolist()  # Convert to JSON-serializable format
+    prediction = model.predict(image)[0][0]  # Extract single prediction
+    confidence = float(prediction) * 100  # Convert to percentage
+    label = "Weed" if confidence > 50 else "Maize"  # Classify
 
-    return jsonify({"prediction": result})
+    return jsonify({"prediction": label, "confidence": f"{confidence:.2f}%"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
