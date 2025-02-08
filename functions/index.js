@@ -1,19 +1,39 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require("firebase-functions");
+const express = require("express");
+const cors = require("cors");
+const tf = require("@tensorflow/tfjs-node");
+const fs = require("fs");
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+const app = express();
+app.use(cors({ origin: true }));
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+// Load the model
+let model;
+async function loadModel() {
+    model = await tf.loadLayersModel("file://model/maize-weedClassifier.json");
+    console.log("Model loaded successfully!");
+}
+loadModel();
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// API to handle image classification
+app.post("/predict", async (req, res) => {
+    try {
+        const imageBuffer = req.body.image;
+        const tensor = tf.node.decodeImage(imageBuffer)
+            .resizeNearestNeighbor([256, 256])
+            .expandDims()
+            .toFloat()
+            .div(tf.scalar(255.0));
+
+        const prediction = model.predict(tensor).dataSync();
+        const confidence = (prediction[0] * 100).toFixed(2);
+        const label = prediction[0] > 0.5 ? "Weed" : "Maize";
+
+        res.json({ label, confidence: `${confidence}%` });
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+// Export the function
+exports.api = functions.https.onRequest(app);
