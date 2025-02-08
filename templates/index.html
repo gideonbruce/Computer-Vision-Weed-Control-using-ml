@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weed Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        img {
+            margin-top: 10px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            display: none; /* Initially hidden */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Weed Detection</h2>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="uploadImage()">Detect</button>
+        <div class="result" id="result"></div>
+        <img id="uploadedImage" alt="Uploaded Image">
+    </div>
+
+    <script>
+        function uploadImage() {
+            let fileInput = document.getElementById("imageInput");
+            let resultDiv = document.getElementById("result");
+            let uploadedImage = document.getElementById("uploadedImage");
+            let file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select an image file.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", file);
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = "Error: " + data.error;
+                } else {
+                    resultDiv.innerHTML = `Prediction: ${data.prediction} ${data.confidence ? "<br>Confidence: " + data.confidence : ""}`;
+                    uploadedImage.src = data.image_url;  // Set the image source
+                    uploadedImage.style.display = "block"; // Show the image
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = "Error in prediction";
+                console.error("Error:", error);
+            });
+        }
+    </script>
+</body>
+</html>
