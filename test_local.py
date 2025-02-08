@@ -27,10 +27,8 @@ prediction = model.predict(image)
 #print("Prediction:", prediction)
 print("Raw Prediction:", prediction)
 print("Predicted Class:", "Weed" if prediction[0][0] > 0.5 else "Maize")
-#confidence = prediction[0][0]  
-#print(f"Predicted Class: {'Weed' if confidence > 0.5 else 'Maize'} (Confidence: {confidence:.2f})")
-confidence = prediction[0][0] * 100  # Convert to percentage
-print(f"Predicted Class: {'Weed' if confidence > 50 else 'Maize'} (Confidence: {confidence:.2f}%)")
+confidence = prediction[0][0]  
+print(f"Predicted Class: {'Weed' if confidence > 0.5 else 'Maize'} (Confidence: {confidence:.2f})")
 
 
 
