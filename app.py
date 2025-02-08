@@ -12,11 +12,10 @@ model = tf.keras.models.load_model(MODEL_PATH)
 
 def preprocess_image(image):
     """Preprocess image to match model input shape"""
-    image = image.resize((256, 256))  # Change this if model expects 256x256
-    image = np.array(image) / 255.0  # Normalize
-    image = np.reshape(image, (1, 256, 256, 3))  # Match model shape
+    image = image.resize((256, 256))  # Resize if model expects 256x256
+    image = np.array(image) / 255.0  # Normalize pixel values
+    image = np.reshape(image, (1, 256, 256, 3))  # Ensure correct shape
     return image
-
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -32,9 +31,14 @@ def predict():
     # Run prediction
     prediction = model.predict(image)[0][0]  # Extract single prediction
     confidence = float(prediction) * 100  # Convert to percentage
-    label = "Weed" if confidence > 50 else "Maize"  # Classify
+    label = "Weed" if prediction > 0.5 else "Maize"  # Classify
 
-    return jsonify({"prediction": label, "confidence": f"{confidence:.2f}%"})
+    # Return confidence only for "Weed"
+    response = {"prediction": label}
+    if label == "Weed":
+        response["confidence"] = f"{confidence:.2f}%"
+
+    return jsonify(response)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
