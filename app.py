@@ -12,10 +12,11 @@ model = tf.keras.models.load_model(MODEL_PATH)
 
 def preprocess_image(image):
     """Preprocess image to match model input shape"""
-    image = image.resize((224, 224))  # Resize to match model input
+    image = image.resize((256, 256))  # Change this if model expects 256x256
     image = np.array(image) / 255.0  # Normalize
-    image = np.expand_dims(image, axis=0)  # Add batch dimension
+    image = np.reshape(image, (1, 256, 256, 3))  # Match model shape
     return image
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -25,6 +26,8 @@ def predict():
     file = request.files["file"]
     image = Image.open(io.BytesIO(file.read())).convert("RGB")
     image = preprocess_image(image)
+
+    print("Expected model input shape:", model.input_shape)
 
     # Run prediction
     prediction = model.predict(image)[0][0]  # Extract single prediction
